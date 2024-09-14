@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %} Prediction {% endblock %}
+{% block content %}
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Raleway:wght@100;300;400;500;600&display=swap");
+
+* {
+  font-family: "Raleway", sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+  outline: none;
+  border: none;
+}
+
+body {
+  max-height: fit-content;
+  background-color: #12141D;
+  background-attachment: fixed;
+  background-position: center;
+  overflow-x: hidden;
+}
+    </style>
+
+    <div class="mx-auto  max-w-3xl my-16 py-14  px-2 sm:px-6 lg:px-8 my-20 p-6 bg-[#1E2029] rounded-lg shadow-lg">
+        <h2 class="text-aqua text-2xl font-semibold mb-4 text-[#fff]">Calculate the price of a House according to requirements!</h2>
+        <form action="predict" class="space-y-4">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="area" class="text-white text-lg">Area (Square Feet)</label>
+                <input type="number" id="area" required name="area" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300">
+            </div>
+            <div class="form-group">
+                <label for="bedroom" class="text-white text-lg">Bedroom</label>
+                <input type="text" id="bedroom" required name="bedroom" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300">
+            </div>
+            <div class="form-group">
+                <label for="bathroom" class="text-white text-lg">Bathroom</label>
+                <input type="text" id="bathroom" required name="bathroom" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300">
+            </div>
+            <div class="form-group">
+                <label for="location" class="text-white text-lg">Location</label>
+                <div class="location-dropdown mt-1">
+                    <select id="location" required name="location" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300">
+                        <option value="" disabled selected>Select a location</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="px-5 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600 transition-colors">Predict</button>
+            </div>
+        </form>
+        <div class="mt-6 text-white">
+            <h2 class="text-xl">Estimated Price for {{ area }}: {{ ans }} Lac Rupees</h2>
+        </div>
+    </div>
+    
+
+
+    <script>
+        // Get the select element
+        var areaSelect = document.getElementById("location");
+
+        // Fetch JSON data from the URL
+        fetch("http://127.0.0.1:8000/ehehbouy")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                // Populate the dropdown options
+                data.area_names.forEach(function (areaName) {
+                    var option = document.createElement("option");
+                    option.text = areaName;
+                    option.value = areaName;
+                    areaSelect.appendChild(option);
+                });
+            })
+            .catch(function(error) {
+                console.error("Error fetching data: " + error);
+            });
+    </script>
+
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %} Chats {% endblock %}
+{% block content %}
+    <style>
+ 
+
+        @import url("https://fonts.googleapis.com/css2?family=Raleway:wght@100;300;400;500;600&display=swap");
+
+        * {
+          font-family: "Raleway", sans-serif;
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          text-decoration: none;
+          outline: none;
+          border: none;
+        }
+        
+        body {
+          max-height: fit-content;
+          background-color: #12141D;
+          background-attachment: fixed;
+          background-position: center;
+          overflow-x: hidden;
+        }
+
+        .messages-area {
+            height: 75vh; /* Fixed height for the messages area */
+            overflow-y: auto;
+            background: #d9dadb;
+            color: #999;
+            padding: 4% 4% 10px;
+            width: 127%;
+        }
+
+        .messages-area-left {
+            height: 81.1vh; /* Fixed height for the messages area */
+            overflow-y: auto;
+            background: #282525;
+            color: #999;
+            padding: 4% 4% 10px;
+            width: 60%;
+        }
+
+        .input-area {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            width: 127%;
+        }
+
+        #message-input {
+            padding: 10px;
+            width: 100%;
+            height: 50%;
+        }
+        .message.left {
+            text-align: left;
+            color: #aaa;
+        }
+
+        .message.right {
+            text-align: right;
+            color: #ccc;
+        }
+
+        .message .content {
+            background: #444;
+            padding: 5px 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            display: inline-block;
+        }
+    </style>
+    <div class="mx-auto max-w-7xl grid 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1 gap-4 rounded-xl my-20 border border-amber-200 ">
+        <!-- Contacts Section -->
+        <div class="bg-[#1E2029] p-6 lg:h-[400px] sm:h-[250px] rounded-md">
+            <div class="text-white text-2xl mb-4">All Contacts</div>
+            <div>
+                {% for user in users_info %}
+                <h6>
+                    <a href="{% url 'chats:chatroom' user.id %}" class="text-white hover:text-amber-500">
+                        {{ user.first_name }} {{ user.last_name }}
+                    </a>
+                </h6>
+                {% endfor %}
+            </div>
+        </div>
+    
+        <!-- Chat Section -->
+        <div class="bg-[#f3f3f3] h-[400px] rounded-md">
+            <!-- Chat Header -->
+            <div class="bg-gray-500 p-4 font-bold text-white border-b-2 border-gray-700">
+                {{ other_user.first_name }} {{ other_user.last_name }}
+            </div>
+            <!-- Messages Area -->
+            <div class="p-4 h-[304px] overflow-y-auto " id="messages-area">
+                {% for message in messages %}
+                <div class="message {% if message.sender == request.user %}text-right{% else %}text-left{% endif %}">
+                    <div class="sent-by text-gray-600">
+                        {% if message.sender == request.user %}Me{% else %}
+                        {{ message.sender.first_name }}{% endif %}
+                    </div>
+                    <div class="content text-white bg-white p-2 rounded-lg shadow-md">{{ message.message }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            <!-- Input Area -->
+            <div class="flex items-center border-t border-gray-300">
+                <input type="text" id="message-input" class="p-4 border rounded border-gray-300" placeholder="Type a message">
+                <button id="send-btn" class="  bg-amber-500 rounded text-white px-4 py-2">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+
+        let message_send_btn = document.getElementById("send-btn");
+        let message_input = document.getElementById("message-input");
+        let messagesContainer = document.getElementById("messages-area");
+
+        function send_message() {
+            let message = message_input.value;
+            if (message === "") {
+                return;
+            }
+            message_input.value = "";
+            // Send the message and update the chat
+            fetch("{% url 'chats:chatroom-ajax' other_user.id %}", {
+                method: "POST",
+                credentials: 'same-origin',
+                headers: {
+                    "Content-Type": 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(message)
+            }).then(e => e.json()).then(messages => {
+                for (message of messages) {
+                    construct_message(message);
+                }
+            });
+        }
+
+        function load_messages() {
+            // Load initial messages and update the chat
+            fetch("{% url 'chats:chatroom-ajax' other_user.id %}")
+                .then(e => e.json())
+                .then(messages => {
+                    for (message of messages) {
+                        construct_message(message);
+                    }
+                });
+        }
+
+        function construct_message(message) {
+            let class_name = "left";
+            if (message.sent) {
+                class_name = "right";
+            }
+            let div = document.createElement("div");
+            div.classList.add("message", class_name);
+            div.innerHTML = `
+        <div class="sent-by">Me</div>
+        <div class="content">${message.message}</div>
+        `;
+            messagesContainer.appendChild(div);
+
+            // Scroll to the latest message
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        message_send_btn.addEventListener('click', send_message);
+        setInterval(load_messages, 2000);
+
+    </script>
+{% endblock %}
